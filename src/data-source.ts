@@ -16,3 +16,16 @@ export const AppDataSource = new DataSource({
     /* entities woll be here */
   ],
 });
+
+export const initializeDataSource = async () => {
+  try {
+    await AppDataSource.initialize();
+    console.log("Database connection has been established successfully!");
+
+    const result = await AppDataSource.query("SELECT NOW()");
+    console.log("Current timestamp from the database:", result);
+  } catch (error) {
+    console.error("Error during Data Source initialization:", error);
+    process.exit(1);
+  }
+};
