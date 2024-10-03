@@ -6,11 +6,10 @@ describe("User Authentication", () => {
   it("should hash the password before saving", async () => {
     const user = new User();
     user.password = "plaintextpassword";
-    await user.hashPassword(); // Ensure this method exists in your User entity
+    await user.hashPassword(); 
 
     const isHashed = await bcrypt.compare("plaintextpassword", user.password);
     expect(isHashed).toBe(true);
   });
 
-  // Add more tests for login, JWT issuing, etc.
 });
