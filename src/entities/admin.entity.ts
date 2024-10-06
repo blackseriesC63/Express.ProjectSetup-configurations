@@ -1,9 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
 import bcrypt from "bcrypt";
-import { Blog } from "./blog.entity"; // Import the Blog entity
 
 @Entity()
-export class User {
+export class Admin {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -15,9 +14,6 @@ export class User {
 
   @Column()
   password: string;
-
-  @OneToMany(() => Blog, (blog) => blog.author) 
-  blogs: Blog[];
 
   async hashPassword(): Promise<void> {
     const salt = await bcrypt.genSalt(10);
