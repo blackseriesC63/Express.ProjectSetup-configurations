@@ -13,6 +13,16 @@ router.post("/signup", async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
+    const existingUser = await userService.findUserByEmail(email);
+    if (existingUser) {
+      return res.status(400).json({
+        message:
+          existingUser.email === email
+            ? "Email is already in use"
+            : "Username is already in use",
+      });
+    }
+
     const savedUser = await userService.createUser(username, email, password);
     res.status(201).json({ message: "User created", userId: savedUser.id });
   } catch (error) {

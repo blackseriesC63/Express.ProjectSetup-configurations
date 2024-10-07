@@ -39,7 +39,9 @@ export class UserService {
     password?: string
   ): Promise<User | null> {
     const user = await this.userRepository.findOne({ where: { id } });
-    if (!user) return null;
+    if (!user) {
+      throw new Error(`User with ID ${id} not found`);
+    }
 
     user.username = username;
     user.email = email;
