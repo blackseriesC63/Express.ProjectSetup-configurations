@@ -2,6 +2,7 @@ import { Router } from "express";
 import { UserService } from "../services/user.service";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { authenticateJWT } from "../middlewares/auth.middleware";
 
 dotenv.config();
 
@@ -94,14 +95,17 @@ router.put("/:id", async (req, res) => {
 });
 
 // Delete User
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", authenticateJWT, async (req, res) => {
   const userId = parseInt(req.params.id);
+  const requestingAdminId = (req as any).user.adminId; // Use adminId
 
   try {
-    await userService.deleteUser(userId);
+    await userService.deleteUser(userId, requestingAdminId);
     res.json({ message: "User deleted" });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting user", error });
+    const errorMessage =
+      error instanceof Error ? error.message : "Error deleting user";
+    res.status(500).json({ message: errorMessage });
   }
 });
 

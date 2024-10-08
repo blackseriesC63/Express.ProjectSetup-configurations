@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
 import bcrypt from "bcrypt";
-import { Blog } from "./blog.entity"; // Import the Blog entity
+import { Blog } from "./blog.entity";
 
 @Entity()
 export class User {
@@ -16,7 +16,10 @@ export class User {
   @Column()
   password: string;
 
-  @OneToMany(() => Blog, (blog) => blog.author) 
+  @Column({ default: false })
+  isAdmin: boolean; // Add isAdmin field
+
+  @OneToMany(() => Blog, (blog) => blog.author)
   blogs: Blog[];
 
   async hashPassword(): Promise<void> {

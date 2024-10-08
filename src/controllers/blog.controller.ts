@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { BlogService } from "../services/blog.service";
-import { authenticateJWT } from "../middlewares/auth.middleware"; 
+import { authenticateJWT } from "../middlewares/auth.middleware";
 
 const router = Router();
 const blogService = new BlogService();
@@ -8,7 +8,7 @@ const blogService = new BlogService();
 // Create Blog
 router.post("/", authenticateJWT, async (req, res) => {
   const { title, content } = req.body;
-  const authorId = (req as any).user.userId; 
+  const authorId = (req as any).user.userId;
 
   try {
     const newBlog = await blogService.createBlog(title, content, authorId);
@@ -45,11 +45,12 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Update 
+// Update
 router.put("/:id", authenticateJWT, async (req, res) => {
   const { id } = req.params;
   const { title, content } = req.body;
-  const authorId = (req as any).user.userId;
+  const user = (req as any).user; // Access the user from the request
+  const authorId = user.userId;
 
   try {
     const blog = await blogService.getBlogById(parseInt(id));
@@ -57,11 +58,18 @@ router.put("/:id", authenticateJWT, async (req, res) => {
       return res.status(404).json({ message: "Blog not found" });
     }
 
-    if (blog.authorId !== authorId) {
-      return res.status(403).json({ message: "You are not allowed to edit this blog" });
+    // Allow updates if the user is the author or an admin
+    if (blog.authorId !== authorId && !user.isAdmin) {
+      return res
+        .status(403)
+        .json({ message: "You are not allowed to edit this blog" });
     }
 
-    const updatedBlog = await blogService.updateBlog(parseInt(id), title, content);
+    const updatedBlog = await blogService.updateBlog(
+      parseInt(id),
+      title,
+      content
+    );
     res.json({ message: "Blog updated", blog: updatedBlog });
   } catch (error) {
     res.status(500).json({ message: "Error updating blog", error });
@@ -71,7 +79,8 @@ router.put("/:id", authenticateJWT, async (req, res) => {
 // Delete Blog
 router.delete("/:id", authenticateJWT, async (req, res) => {
   const { id } = req.params;
-  const authorId = (req as any).user.userId; 
+  const user = (req as any).user; // Access the user from the request
+  const authorId = user.userId;
 
   try {
     const blog = await blogService.getBlogById(parseInt(id));
@@ -79,8 +88,11 @@ router.delete("/:id", authenticateJWT, async (req, res) => {
       return res.status(404).json({ message: "Blog not found" });
     }
 
-    if (blog.authorId !== authorId) {
-      return res.status(403).json({ message: "You are not allowed to delete this blog" });
+    // Allow deletion if the user is the author or an admin
+    if (blog.authorId !== authorId && !user.isAdmin) {
+      return res
+        .status(403)
+        .json({ message: "You are not allowed to delete this blog" });
     }
 
     await blogService.deleteBlog(parseInt(id));

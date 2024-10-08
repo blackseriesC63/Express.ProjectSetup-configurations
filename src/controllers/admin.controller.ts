@@ -2,6 +2,7 @@ import { Router } from "express";
 import { AdminService } from "../services/admin.service";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { authenticateJWT } from "../middlewares/auth.middleware";
 
 dotenv.config();
 
@@ -25,7 +26,7 @@ router.post("/signup", async (req, res) => {
 });
 
 // getAllAdmins
-router.get("/", async (req, res) => {
+router.get("/", authenticateJWT, async (req, res) => {
   try {
     const admins = await adminService.findAllAdmins();
     res.json(admins);
@@ -49,8 +50,9 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
+    // Generate JWT with adminId and isAdmin
     const token = jwt.sign(
-      { adminId: admin.id },
+      { adminId: admin.id, isAdmin: admin.isAdmin }, // Include isAdmin in the token
       process.env.JWT_SECRET || "your_jwt_secret",
       { expiresIn: "1h" }
     );
@@ -60,8 +62,5 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ message: "Error during login", error });
   }
 });
-
-
-
 
 export default router;
