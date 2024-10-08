@@ -1,16 +1,9 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  OneToMany,
-  Unique,
-} from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, Unique } from "typeorm";
 import bcrypt from "bcrypt";
-import { Blog } from "./blog.entity";
 
 @Entity()
 @Unique(["email"])
-export class User {
+export class Admin {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -23,11 +16,8 @@ export class User {
   @Column()
   password: string;
 
-  @Column({ default: false })
+  @Column({ default: true })
   isAdmin: boolean;
-
-  @OneToMany(() => Blog, (blog) => blog.author)
-  blogs: Blog[];
 
   async hashPassword(): Promise<void> {
     const salt = await bcrypt.genSalt(10);

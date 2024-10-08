@@ -1,7 +1,8 @@
 import { Router } from "express";
-import { UserService } from "../services/user.service"; 
+import { UserService } from "../services/user.service";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { authenticateJWT } from "../middlewares/auth.middleware";
 
 dotenv.config();
 
@@ -13,20 +14,20 @@ router.post("/signup", async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
-    const existingUser = await userService.findUserByEmail(email);
-    if (existingUser) {
-      return res.status(400).json({
-        message:
-          existingUser.email === email
-            ? "Email is already in use"
-            : "Username is already in use",
-      });
-    }
-
     const savedUser = await userService.createUser(username, email, password);
     res.status(201).json({ message: "User created", userId: savedUser.id });
   } catch (error) {
-    res.status(500).json({ message: "Error creating user", error });
+    if (error instanceof Error) {
+      if (
+        error.message.includes("duplicate key value violates unique constraint")
+      ) {
+        return res.status(400).json({ message: "Email already in use" });
+      }
+      return res
+        .status(500)
+        .json({ message: "Error creating user", error: error.message });
+    }
+    res.status(500).json({ message: "Error creating user" });
   }
 });
 
@@ -104,14 +105,17 @@ router.put("/:id", async (req, res) => {
 });
 
 // Delete User
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", authenticateJWT, async (req, res) => {
   const userId = parseInt(req.params.id);
+  const requestingAdminId = (req as any).user.adminId;
 
   try {
-    await userService.deleteUser(userId);
+    await userService.deleteUser(userId, requestingAdminId);
     res.json({ message: "User deleted" });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting user", error });
+    const errorMessage =
+      error instanceof Error ? error.message : "Error deleting user";
+    res.status(500).json({ message: errorMessage });
   }
 });
 

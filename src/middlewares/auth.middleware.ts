@@ -13,8 +13,19 @@ export const authenticateJWT = (
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret") as {
+      adminId: number;
+      isAdmin: boolean;
+    }; // Adjusted type
+
+    // Store decoded user info in the request
     (req as any).user = decoded;
+
+    // Optional: Check if user is admin
+    if (!decoded.isAdmin) {
+      return res.status(403).json({ message: "Access denied: Admins only" });
+    }
+
     next();
   } catch (error) {
     return res.status(403).json({ message: "Invalid Token" });
