@@ -1,5 +1,5 @@
-import { AppDataSource } from "../../data-source";
-import { User } from "../../entities/user.entity";
+import { AppDataSource } from "../data-source"; 
+import { User } from "../entities/user.entity"; 
 import bcrypt from "bcrypt";
 
 export class UserService {
@@ -19,7 +19,6 @@ export class UserService {
     return await this.userRepository.save(user);
   }
 
-  //get user by id
   async findUserById(id: number): Promise<User | null> {
     return await this.userRepository.findOne({ where: { id } });
   }

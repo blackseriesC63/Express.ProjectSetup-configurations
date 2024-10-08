@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { UserService } from "../services/user/user.service";
+import { UserService } from "../services/user.service"; 
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
