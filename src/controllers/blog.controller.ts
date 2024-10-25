@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { BlogService } from "../services/blog.service";
 import { authenticateJWT } from "../middlewares/auth.middleware";
+import { requireRole } from "../middlewares/eole.middleware";
 
 const router = Router();
 const blogService = new BlogService();
@@ -88,37 +89,42 @@ router.put("/:id", authenticateJWT, async (req, res) => {
 });
 
 // Delete Blog
-router.delete("/:id", authenticateJWT, async (req, res) => {
-  const { id } = req.params;
-  const user = (req as any).user;
-  const authorId = user.userId;
+router.delete(
+  "/:id",
+  authenticateJWT,
+  requireRole("admin"),
+  async (req, res) => {
+    const { id } = req.params;
+    const user = (req as any).user;
+    const authorId = user.userId;
 
-  try {
-    const blog = await blogService.getBlogById(parseInt(id));
-    if (!blog) {
-      return res.status(404).json({ message: "Blog not found" });
+    try {
+      const blog = await blogService.getBlogById(parseInt(id));
+      if (!blog) {
+        return res.status(404).json({ message: "Blog not found" });
+      }
+
+      if (blog.authorId !== authorId && !user.isAdmin) {
+        return res
+          .status(403)
+          .json({ message: "You are not allowed to delete this blog" });
+      }
+
+      await blogService.deleteBlog(parseInt(id));
+      res.json({ message: "Blog deleted" });
+    } catch (error) {
+      res.status(500).json({
+        message: "Error deleting blog",
+        error: error instanceof Error ? error.message : error,
+      });
     }
-
-    if (blog.authorId !== authorId && !user.isAdmin) {
-      return res
-        .status(403)
-        .json({ message: "You are not allowed to delete this blog" });
-    }
-
-    await blogService.deleteBlog(parseInt(id));
-    res.json({ message: "Blog deleted" });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error deleting blog",
-      error: error instanceof Error ? error.message : error,
-    });
   }
-});
+);
 
 router.post("/:id/comments", authenticateJWT, async (req, res) => {
   const { id } = req.params;
   const { content } = req.body;
-  const userId = (req as any).user.userId; 
+  const userId = (req as any).user.userId;
 
   try {
     const blog = await blogService.getBlogById(parseInt(id));
@@ -139,7 +145,6 @@ router.post("/:id/comments", authenticateJWT, async (req, res) => {
   }
 });
 
-
 // Update Comment
 router.put("/comments/:commentId", authenticateJWT, async (req, res) => {
   const { commentId } = req.params;
@@ -159,7 +164,10 @@ router.put("/comments/:commentId", authenticateJWT, async (req, res) => {
         .json({ message: "You are not allowed to edit this comment" });
     }
 
-    const updatedComment = await blogService.updateComment(parseInt(commentId), content);
+    const updatedComment = await blogService.updateComment(
+      parseInt(commentId),
+      content
+    );
     res.json({ message: "Comment updated", comment: updatedComment });
   } catch (error) {
     res.status(500).json({
@@ -170,37 +178,39 @@ router.put("/comments/:commentId", authenticateJWT, async (req, res) => {
 });
 
 // Delete Comment
-router.delete("/comments/:commentId", authenticateJWT, async (req, res) => {
-  const { commentId } = req.params;
-  const user = (req as any).user;
-  const userId = user.userId;
+router.delete(
+  "/comments/:commentId",
+  authenticateJWT,
+  requireRole("admin"),
+  async (req, res) => {
+    const { commentId } = req.params;
+    const user = (req as any).user;
+    const userId = user.userId;
 
-  try {
-    const comment = await blogService.getCommentById(parseInt(commentId));
-    if (!comment) {
-      return res.status(404).json({ message: "Comment not found" });
+    try {
+      const comment = await blogService.getCommentById(parseInt(commentId));
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+      if (comment.userId !== userId && !user.isAdmin) {
+        return res
+          .status(403)
+          .json({ message: "You are not allowed to delete this comment" });
+      }
+
+      await blogService.deleteComment(parseInt(commentId));
+      res.json({ message: "Comment deleted" });
+    } catch (error) {
+      res.status(500).json({
+        message: "Error deleting comment",
+        error: error instanceof Error ? error.message : error,
+      });
     }
-
-    // Check if the user is the owner of the comment or an admin
-    if (comment.userId !== userId && !user.isAdmin) {
-      return res
-        .status(403)
-        .json({ message: "You are not allowed to delete this comment" });
-    }
-
-    await blogService.deleteComment(parseInt(commentId));
-    res.json({ message: "Comment deleted" });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error deleting comment",
-      error: error instanceof Error ? error.message : error,
-    });
   }
-});
-
+);
 
 // Get All Comments
-router.get("/:id/comments", async (req, res) => {
+router.get("/:id/comments", requireRole("admin"), async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -214,8 +224,6 @@ router.get("/:id/comments", async (req, res) => {
   }
 });
 
-
 // Delete Comment
-
 
 export default router;
