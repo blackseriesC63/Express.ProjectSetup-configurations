@@ -3,6 +3,7 @@ import { UserService } from "../services/user.service";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { authenticateJWT } from "../middlewares/auth.middleware";
+import { requireRole } from "../middlewares/role.middleware";
 
 dotenv.config();
 
@@ -74,7 +75,7 @@ router.post("/login", async (req, res) => {
 });
 
 // Get All Users
-router.get("/", async (req, res) => {
+router.get("/", requireRole("admin"), async (req, res) => {
   try {
     const users = await userService.findAllUsers();
     res.json(users);
