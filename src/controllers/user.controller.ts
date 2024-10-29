@@ -3,7 +3,7 @@ import { UserService } from "../services/user.service";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { authenticateJWT } from "../middlewares/auth.middleware";
-import { requireRole } from "../middlewares/eole.middleware";
+import { requireRole } from "../middlewares/role.middleware";
 
 dotenv.config();
 

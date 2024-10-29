@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { BlogService } from "../services/blog.service";
 import { authenticateJWT } from "../middlewares/auth.middleware";
-import { requireRole } from "../middlewares/eole.middleware";
+import { requireRole } from "../middlewares/role.middleware";
 
 const router = Router();
 const blogService = new BlogService();
@@ -178,36 +178,31 @@ router.put("/comments/:commentId", authenticateJWT, async (req, res) => {
 });
 
 // Delete Comment
-router.delete(
-  "/comments/:commentId",
-  authenticateJWT,
-  requireRole("admin"),
-  async (req, res) => {
-    const { commentId } = req.params;
-    const user = (req as any).user;
-    const userId = user.userId;
+router.delete("/comments/:commentId", authenticateJWT, async (req, res) => {
+  const { commentId } = req.params;
+  const user = (req as any).user;
+  const userId = user.userId;
 
-    try {
-      const comment = await blogService.getCommentById(parseInt(commentId));
-      if (!comment) {
-        return res.status(404).json({ message: "Comment not found" });
-      }
-      if (comment.userId !== userId && !user.isAdmin) {
-        return res
-          .status(403)
-          .json({ message: "You are not allowed to delete this comment" });
-      }
-
-      await blogService.deleteComment(parseInt(commentId));
-      res.json({ message: "Comment deleted" });
-    } catch (error) {
-      res.status(500).json({
-        message: "Error deleting comment",
-        error: error instanceof Error ? error.message : error,
-      });
+  try {
+    const comment = await blogService.getCommentById(parseInt(commentId));
+    if (!comment) {
+      return res.status(404).json({ message: "Comment not found" });
     }
+    if (comment.userId !== userId && !user.isAdmin) {
+      return res
+        .status(403)
+        .json({ message: "You are not allowed to delete this comment" });
+    }
+
+    await blogService.deleteComment(parseInt(commentId));
+    res.json({ message: "Comment deleted" });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error deleting comment",
+      error: error instanceof Error ? error.message : error,
+    });
   }
-);
+});
 
 // Get All Comments
 router.get("/:id/comments", requireRole("admin"), async (req, res) => {
