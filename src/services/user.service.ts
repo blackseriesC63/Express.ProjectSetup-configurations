@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 
 export class UserService {
   private userRepository = AppDataSource.getRepository(User);
-  private adminRepository = AppDataSource.getRepository(Admin); 
+  private adminRepository = AppDataSource.getRepository(Admin);
 
   async createUser(
     username: string,
@@ -43,6 +43,7 @@ export class UserService {
     if (!user) {
       throw new Error(`User with ID ${id} not found`);
     }
+
     user.username = username;
     user.email = email;
     if (password) {
@@ -58,7 +59,6 @@ export class UserService {
     if (!user) throw new Error("User not found");
 
     const admin = await this.adminRepository.findOne({
-      // This will now work
       where: { id: requestingAdminId },
     });
     if (!admin || !admin.isAdmin) throw new Error("Access denied");

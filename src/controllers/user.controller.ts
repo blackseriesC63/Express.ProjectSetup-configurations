@@ -120,4 +120,35 @@ router.delete("/:id", authenticateJWT, async (req, res) => {
   }
 });
 
+router.get("/profile", authenticateJWT, async (req, res) => {
+  const userId = (req as any).user.userId;
+
+  try {
+    const user = await userService.findUserById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    // Return only necessary fields
+    res.json({ id: user.id, username: user.username, email: user.email });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching profile", error });
+  }
+});
+
+// Update Profile (Authenticated user only)
+router.put("/profile", authenticateJWT, async (req, res) => {
+  const userId = (req as any).user.userId;
+  const { username, email } = req.body;
+
+  try {
+    const updatedUser = await userService.updateUser(userId, username, email);
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({ message: "Profile updated", user: updatedUser });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating profile", error });
+  }
+});
+
 export default router;
