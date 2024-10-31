@@ -29,4 +29,7 @@ export class Blog {
 
   @Column()
   authorId: number;
+
+  @Column({ type: "int", default: 0 })
+  likes: number;
 }

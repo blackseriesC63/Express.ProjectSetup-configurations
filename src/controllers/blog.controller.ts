@@ -219,6 +219,43 @@ router.get("/:id/comments", requireRole("admin"), async (req, res) => {
   }
 });
 
+router.post("/:id/like", authenticateJWT, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const blog = await blogService.likeBlog(parseInt(id));
+    if (!blog) {
+      return res.status(404).json({ message: "Blog not found" });
+    }
+    res.json({ message: "Blog liked", likes: blog.likes });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error liking blog",
+      error: error instanceof Error ? error.message : error,
+    });
+  }
+});
+
+// Unlike a blog post
+router.post("/:id/unlike", authenticateJWT, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const blog = await blogService.unlikeBlog(parseInt(id));
+    if (!blog) {
+      return res
+        .status(404)
+        .json({ message: "Blog not found or no likes to remove" });
+    }
+    res.json({ message: "Blog unliked", likes: blog.likes });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error unliking blog",
+      error: error instanceof Error ? error.message : error,
+    });
+  }
+});
+
 // Delete Comment
 
 export default router;

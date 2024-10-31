@@ -99,4 +99,20 @@ export class BlogService {
   async deleteComment(commentId: number): Promise<void> {
     await this.commentRepository.delete(commentId);
   }
+
+  async likeBlog(id: number): Promise<Blog | null> {
+    const blog = await this.blogRepository.findOne({ where: { id } });
+    if (!blog) return null;
+
+    blog.likes += 1;
+    return await this.blogRepository.save(blog);
+  }
+
+  async unlikeBlog(id: number): Promise<Blog | null> {
+    const blog = await this.blogRepository.findOne({ where: { id } });
+    if (!blog || blog.likes === 0) return null;
+
+    blog.likes -= 1;
+    return await this.blogRepository.save(blog);
+  }
 }
